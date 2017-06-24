@@ -1,3 +1,9 @@
+[general]
+source_file_name: tweets.txt
+log_file_name: zazu.log
+random_time: 5 # in minutes
+log_level: INFO # choose from the levels listed here: https://docs.python.org/3.7/library/logging.html?highlight=logging#levels
+
 [api]
 consumer_key: CONSUMER_KEY_HERE
 consumer_secret: CONSUMER_SECRET_HERE

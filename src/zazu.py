@@ -17,26 +17,46 @@ RANDOMTIME = 5 * 60 # 5 minutes
 
 
 def isValidTweet(text):
+    """
+    >>> isValidTweet("Hoi dit is een test")
+    True
+    >>> isValidTweet("LONG "* 100 + "TWEET")
+    False
+    >>> isValidTweet("https://en.wikipedia.org/wiki/Python_(programming_language " * 7)
+    False
+    >>> isValidTweet("https://en.wikipedia.org/wiki/Python_(programming_language " * 5)
+    True
+    """
+
     text = text.strip()
     relative_length = len(text)
     for match in re.findall("https?://[\S]*",text):
         relative_length = relative_length + 23 - len(match)
     return relative_length <= 140 and relative_length > 0
 
-def isEmpty(filename):
-    filestat = os.stat(SOURCEFILENAME)
-    return filestat.st_size == 0
 
-def get_api():
-    CONFIG = configparser.ConfigParser()
-    CONFIG.read(CONFIGFILE)
+def isEmpty(filename):
+    """Return True if `filename` is empty, otherwise False
+
+    >>> zazu.isEmpty("../tests/emptyfile.txt")
+    True
+    >>> zazu.isEmpty("../tests/badtweets.txt")
+    False
+    """
+    statinfo = os.stat(filename)
+    return statinfo.st_size == 0
+
+def getApi(config):
     api = twitter.Api(
-        consumer_key=CONFIG.get('api', 'consumer_key'),
-        consumer_secret=CONFIG.get('api', 'consumer_secret'),
-        access_token_key=CONFIG.get('api', 'access_token_key'),
-        access_token_secret=CONFIG.get('api', 'access_token_secret')
+        consumer_key=config.get('api', 'consumer_key'),
+        consumer_secret=config.get('api', 'consumer_secret'),
+        access_token_key=config.get('api', 'access_token_key'),
+        access_token_secret=config.get('api', 'access_token_secret')
     )
+    user = api.VerifyCredentials()
+    logging.info("running with valid api credentials for user %s (%s)", user.name, user.screen_name)
     return api
+
 
 def main(configfile, logfile, sourcefilename, verbosity):
     # read configfile
@@ -48,9 +68,9 @@ def main(configfile, logfile, sourcefilename, verbosity):
         stream=logfile,level=verbosity)
 
     tweettext = ""
-    while(not isValidTweet(tweettext) and not isEmpty(SOURCEFILENAME)):
+    while(not isValidTweet(tweettext) and not isEmpty(sourcefilename)):
         # open linefile, read first line
-        sourcefile = open(SOURCEFILENAME,"r")
+        sourcefile = open(sourcefilename,"r")
         tweettext = sourcefile.readline().strip()
 
         # read the tail of the source file, close the file
@@ -60,9 +80,8 @@ def main(configfile, logfile, sourcefilename, verbosity):
         # process tweet
         if isValidTweet(tweettext):
             logging.info("Valid tweet text: \"%s\"", tweettext)
-            print(tweettext)
             try:
-                api = get_api()
+                api = getApi(config)
                 api.VerifyCredentials()
             except twitter.error.TwitterError as error:
                 logging.error("TwitterError: %s",error)
@@ -83,10 +102,9 @@ def main(configfile, logfile, sourcefilename, verbosity):
 
         else:
             logging.error("\"%s\" is not a valid tweet",tweettext)
-            print("\"" + tweettext + "\"","is an unvalid tweet text")
 
         # update source file
-        sourcefile = open(SOURCEFILENAME,"w")
+        sourcefile = open(sourcefilename,"w")
         sourcefile.write(sourcefile_tail)
         sourcefile.close()
 
