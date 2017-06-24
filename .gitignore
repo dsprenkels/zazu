@@ -1,0 +1,9 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Zazu specific files
+config.txt
+tweets.txt
+zazu.log
