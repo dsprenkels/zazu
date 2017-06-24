@@ -6,4 +6,5 @@ __pycache__/
 # Zazu specific files
 config.txt
 tweets.txt
+tweets.ini
 zazu.log
